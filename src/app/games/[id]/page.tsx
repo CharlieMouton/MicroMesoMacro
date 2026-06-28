@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { RatingForm } from "./rating-form";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth/auth";
@@ -27,15 +28,38 @@ export default async function GamePage({
   ]);
 
   return (
-    <main style={{ padding: 24 }}>
-      <h1>{game.title}</h1>
-      {game.description && <p>{game.description}</p>}
+    <main style={{ maxWidth: 860, margin: "0 auto", padding: "34px 40px 80px" }}>
+      <Link
+        href="/"
+        style={{
+          fontSize: 12,
+          letterSpacing: ".1em",
+          fontWeight: 700,
+          color: "var(--text-dim)",
+        }}
+      >
+        ← LIBRARY
+      </Link>
 
-      <h2>Crowd average</h2>
-      <p>
-        Micro: {aggregate._avg.micro?.toFixed(1) ?? "—"} · Meso: {aggregate._avg.meso?.toFixed(1) ?? "—"} · Macro:{" "}
-        {aggregate._avg.macro?.toFixed(1) ?? "—"}
-      </p>
+      <div style={{ display: "flex", gap: 18, marginTop: 22, alignItems: "center" }}>
+        <div
+          style={{
+            width: 72,
+            height: 72,
+            borderRadius: 6,
+            flex: "none",
+            background: "linear-gradient(135deg, var(--micro-dim) -20%, #0e0e14 65%)",
+          }}
+        />
+        <div>
+          <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em" }}>{game.title}</h2>
+          {game.description && (
+            <div style={{ fontSize: 12, color: "var(--text-dim)", marginTop: 6, maxWidth: 500 }}>
+              {game.description}
+            </div>
+          )}
+        </div>
+      </div>
 
       <RatingForm
         gameId={game.id}
