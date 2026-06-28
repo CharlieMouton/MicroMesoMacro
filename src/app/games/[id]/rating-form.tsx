@@ -9,12 +9,17 @@ export function RatingForm({
   initial,
   crowdAverage,
   alreadyRated,
+  signedIn = true,
   secondaryAction,
 }: {
   gameId: string;
   initial: Record<Axis, number>;
   crowdAverage: Record<Axis, number | null> | null;
   alreadyRated: boolean;
+  /** Sliders work for anonymous visitors too; only saving requires a Steam
+   * login (ratings are stored per-user). Defaults to true for callers that
+   * are always behind an auth gate (the game detail page). */
+  signedIn?: boolean;
   /** Renders an extra button next to Submit — used by the home page's
    * "quick rate" widget to put Skip alongside Submit. */
   secondaryAction?: { label: string; onClick: () => void };
@@ -25,6 +30,7 @@ export function RatingForm({
   const [result, setResult] = useState<Record<Axis, number> | null>(null);
   const [crowd, setCrowd] = useState(crowdAverage);
   const [submitting, setSubmitting] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
   const refs: Record<Axis, React.RefObject<HTMLDivElement | null>> = {
     micro: useRef(null),
     meso: useRef(null),
@@ -65,13 +71,19 @@ export function RatingForm({
   }
 
   async function submit() {
+    if (!signedIn) {
+      setNeedsAuth(true);
+      return;
+    }
     setSubmitting(true);
     const res = await fetch("/api/ratings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gameId, ...draft }),
     });
-    if (res.ok) {
+    if (res.status === 401) {
+      setNeedsAuth(true);
+    } else if (res.ok) {
       setResult(draft);
       // Crowd average is hidden from the GET route until the caller has a
       // rating on file — now that we've just submitted one, re-fetch it.
@@ -229,6 +241,25 @@ export function RatingForm({
           </button>
         )}
       </div>
+
+      {needsAuth && (
+        <div
+          style={{
+            marginTop: 14,
+            fontSize: 12.5,
+            color: "var(--text-dim)",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+          }}
+        >
+          <span>Connect Steam to save this rating.</span>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- full navigation into a route handler, not a page */}
+          <a href="/api/auth/steam" style={{ fontWeight: 700, color: "var(--meso)", textDecoration: "underline" }}>
+            CONNECT STEAM
+          </a>
+        </div>
+      )}
 
       {(result || alreadyRated) && (
         <div style={{ marginTop: 30 }}>

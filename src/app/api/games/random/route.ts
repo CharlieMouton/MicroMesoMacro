@@ -8,18 +8,19 @@ const POPULARITY_POOL_SIZE = 20;
 
 export async function GET() {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const userId = session.user.id;
+  const userId = session?.user?.id;
 
-  const [ratedGames, library] = await Promise.all([
-    prisma.rating.findMany({ where: { userId }, select: { gameId: true } }),
-    prisma.steamLibraryLink.findUnique({
-      where: { userId },
-      include: { ownedGames: { where: { gameId: { not: null } }, select: { gameId: true } } },
-    }),
-  ]);
+  // Anonymous visitors can still get a (less personalized) suggestion —
+  // they just don't have a rated/owned-games history to bias against.
+  const [ratedGames, library] = userId
+    ? await Promise.all([
+        prisma.rating.findMany({ where: { userId }, select: { gameId: true } }),
+        prisma.steamLibraryLink.findUnique({
+          where: { userId },
+          include: { ownedGames: { where: { gameId: { not: null } }, select: { gameId: true } } },
+        }),
+      ])
+    : [[], null];
 
   const ratedGameIds = ratedGames.map((r) => r.gameId);
   const ownedGameIds = (library?.ownedGames.map((og) => og.gameId).filter(Boolean) ?? []) as string[];

@@ -59,60 +59,8 @@ export default async function HomePage() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          {session?.user?.id ? (
-            <QuickRate />
-          ) : (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 16,
-                flexWrap: "wrap",
-                background: "var(--panel)",
-                border: "1px solid var(--border-dim)",
-                borderRadius: 7,
-                padding: 18,
-              }}
-            >
-              <span style={{ color: "var(--text-dim)", fontSize: 13 }}>
-                Connect Steam to get personalized game suggestions to rate.
-              </span>
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- full navigation into a route handler, not a page */}
-              <a
-                href="/api/auth/steam"
-                style={{
-                  fontWeight: 800,
-                  fontSize: 12,
-                  letterSpacing: ".06em",
-                  padding: "11px 18px",
-                  borderRadius: 5,
-                  color: "var(--bg)",
-                  background: "linear-gradient(90deg, var(--micro), var(--meso), var(--macro))",
-                }}
-              >
-                CONNECT STEAM
-              </a>
-            </div>
-          )}
+          <QuickRate signedIn={!!session?.user?.id} />
         </div>
-
-        <Link
-          href="/about"
-          style={{
-            display: "block",
-            marginTop: 34,
-            background: "var(--panel)",
-            border: "1px solid var(--border)",
-            borderTop: "2px solid var(--meso)",
-            borderRadius: 5,
-            padding: "18px 18px 20px",
-          }}
-        >
-          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
-            Learn more about the MiMeMa framework →
-          </span>
-        </Link>
       </div>
     </main>
   );

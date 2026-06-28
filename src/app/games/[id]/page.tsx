@@ -87,6 +87,7 @@ export default async function GamePage({
             : null
         }
         alreadyRated={!!ownRating}
+        signedIn={!!session?.user?.id}
       />
     </main>
   );
