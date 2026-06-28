@@ -71,6 +71,22 @@ export function igdbImageUrl(imageId: string, size: "t_cover_big" | "t_cover_sma
 }
 
 /**
+ * Free-text title search, for adding games that don't come through a Steam
+ * library sync (console exclusives, etc.). IGDB's relevance ranking is not
+ * reliable for well-known titles — fan hacks/ROM mods/joke entries (e.g.
+ * "Super Mario Odyssey F.L.U.D.D.", "...64", "...Online") regularly outrank
+ * the real game. A wide limit gives callers enough candidates to find an
+ * exact name match themselves rather than trusting result order.
+ */
+export async function searchGamesByName(name: string): Promise<IgdbGame[]> {
+  const escaped = name.replace(/"/g, '\\"');
+  return igdbQuery<IgdbGame[]>(
+    "games",
+    `search "${escaped}"; fields name,summary,cover.image_id,first_release_date,genres.name; limit 20;`
+  );
+}
+
+/**
  * Maps a Steam appid to an IGDB game id via IGDB's external_games table.
  * external_game_source 1 = Steam. (The older `category` enum field is
  * deprecated/unset on most rows now — filtering on it returns nothing.)
