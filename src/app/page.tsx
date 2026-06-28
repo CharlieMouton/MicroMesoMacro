@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { auth } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { SyncButton } from "./sync-button";
@@ -174,7 +175,7 @@ function GameCard({
   crowd,
   ownRating,
 }: {
-  game: { id: string; title: string };
+  game: { id: string; title: string; headerImage: string | null };
   crowd: { micro: number | null; meso: number | null; macro: number | null };
   ownRating: { micro: number; meso: number; macro: number } | null;
 }) {
@@ -208,6 +209,15 @@ function GameCard({
           padding: 12,
         }}
       >
+        {game.headerImage && (
+          <Image
+            src={game.headerImage}
+            alt=""
+            fill
+            sizes="258px"
+            style={{ objectFit: "cover", objectPosition: "center 20%" }}
+          />
+        )}
         <div style={{ position: "absolute", top: 10, right: 11 }}>
           {ownRating ? (
             <span
@@ -239,9 +249,11 @@ function GameCard({
             </span>
           )}
         </div>
-        <div style={{ fontSize: 30, fontWeight: 800, color: "rgba(255,255,255,.13)", letterSpacing: "-.02em" }}>
-          {initials}
-        </div>
+        {!game.headerImage && (
+          <div style={{ fontSize: 30, fontWeight: 800, color: "rgba(255,255,255,.13)", letterSpacing: "-.02em" }}>
+            {initials}
+          </div>
+        )}
       </div>
       <div style={{ padding: "14px 14px 15px" }}>
         <div style={{ fontSize: 14, fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>

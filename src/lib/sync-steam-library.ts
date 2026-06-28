@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getOwnedGames } from "@/lib/steam";
-import { getGameByIgdbId, resolveBySteamAppId } from "@/lib/igdb";
+import { getGameByIgdbId, igdbImageUrl, resolveBySteamAppId } from "@/lib/igdb";
 
 // IGDB enforces 4 req/sec; resolving + fetching a new game costs 2 requests,
 // so cap how many unresolved appids we look up per sync call. Steam's
@@ -37,7 +37,9 @@ export async function syncSteamLibrary(userId: string, steamId: string) {
             slug: `steam-${owned.appid}`,
             title: igdbGame?.name ?? owned.name,
             description: igdbGame?.summary,
-            headerImage: igdbGame?.cover?.url,
+            headerImage: igdbGame?.cover?.image_id
+              ? igdbImageUrl(igdbGame.cover.image_id, "t_cover_big")
+              : undefined,
             metadata: igdbGame ? JSON.parse(JSON.stringify(igdbGame)) : undefined,
           },
         });

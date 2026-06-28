@@ -47,7 +47,7 @@ export interface IgdbGame {
   id: number;
   name: string;
   summary?: string;
-  cover?: { url: string };
+  cover?: { image_id: string };
   first_release_date?: number;
   genres?: { name: string }[];
 }
@@ -55,19 +55,30 @@ export interface IgdbGame {
 export async function getGameByIgdbId(id: number): Promise<IgdbGame | null> {
   const games = await igdbQuery<IgdbGame[]>(
     "games",
-    `fields name,summary,cover.url,first_release_date,genres.name; where id = ${id};`
+    `fields name,summary,cover.image_id,first_release_date,genres.name; where id = ${id};`
   );
   return games[0] ?? null;
 }
 
 /**
+ * Builds a sized IGDB CDN image URL from an image_id. Requesting the right
+ * size upfront (rather than the default thumbnail or a full-res original)
+ * avoids shipping oversized images to game cards. Size guide:
+ * https://api-docs.igdb.com/#images
+ */
+export function igdbImageUrl(imageId: string, size: "t_cover_big" | "t_cover_small" = "t_cover_big"): string {
+  return `https://images.igdb.com/igdb/image/upload/${size}/${imageId}.jpg`;
+}
+
+/**
  * Maps a Steam appid to an IGDB game id via IGDB's external_games table.
- * Category 1 = Steam, per IGDB's ExternalGameCategory enum.
+ * external_game_source 1 = Steam. (The older `category` enum field is
+ * deprecated/unset on most rows now — filtering on it returns nothing.)
  */
 export async function resolveBySteamAppId(appId: number): Promise<number | null> {
   const matches = await igdbQuery<{ game: number }[]>(
     "external_games",
-    `fields game; where category = 1 & uid = "${appId}"; limit 1;`
+    `fields game; where external_game_source = 1 & uid = "${appId}"; limit 1;`
   );
   return matches[0]?.game ?? null;
 }

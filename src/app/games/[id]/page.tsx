@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { RatingForm } from "./rating-form";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth/auth";
@@ -48,9 +49,15 @@ export default async function GamePage({
             height: 72,
             borderRadius: 6,
             flex: "none",
+            position: "relative",
+            overflow: "hidden",
             background: "linear-gradient(135deg, var(--micro-dim) -20%, #0e0e14 65%)",
           }}
-        />
+        >
+          {game.headerImage && (
+            <Image src={game.headerImage} alt="" fill sizes="72px" style={{ objectFit: "cover" }} />
+          )}
+        </div>
         <div>
           <h2 style={{ fontSize: 26, fontWeight: 800, letterSpacing: "-.02em" }}>{game.title}</h2>
           {game.description && (
