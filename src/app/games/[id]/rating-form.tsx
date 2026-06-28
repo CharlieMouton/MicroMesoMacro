@@ -10,16 +10,25 @@ export function RatingForm({
   crowdAverage,
   alreadyRated,
   signedIn = true,
+  showHeading = true,
+  lockAfterSubmit = false,
   secondaryAction,
 }: {
   gameId: string;
   initial: Record<Axis, number>;
-  crowdAverage: Record<Axis, number | null> | null;
+  crowdAverage: (Record<Axis, number | null> & { ratingCount?: number }) | null;
   alreadyRated: boolean;
   /** Sliders work for anonymous visitors too; only saving requires a Steam
    * login (ratings are stored per-user). Defaults to true for callers that
    * are always behind an auth gate (the game detail page). */
   signedIn?: boolean;
+  /** The game detail page has no other heading above the form; quick-rate
+   * shows its own heading above the game title instead, so it passes false. */
+  showHeading?: boolean;
+  /** After a successful submit, hide the sliders/submit button and show only
+   * the result comparison — used by quick-rate so people see how they
+   * compare to the crowd before immediately re-editing what they just rated. */
+  lockAfterSubmit?: boolean;
   /** Renders an extra button next to Submit — used by the home page's
    * "quick rate" widget to put Skip alongside Submit. */
   secondaryAction?: { label: string; onClick: () => void };
@@ -31,6 +40,7 @@ export function RatingForm({
   const [crowd, setCrowd] = useState(crowdAverage);
   const [submitting, setSubmitting] = useState(false);
   const [needsAuth, setNeedsAuth] = useState(false);
+  const [locked, setLocked] = useState(false);
   const refs: Record<Axis, React.RefObject<HTMLDivElement | null>> = {
     micro: useRef(null),
     meso: useRef(null),
@@ -92,6 +102,7 @@ export function RatingForm({
         const data = await detail.json();
         setCrowd(data.crowdAverage);
       }
+      if (lockAfterSubmit) setLocked(true);
       router.refresh();
     }
     setSubmitting(false);
@@ -99,19 +110,21 @@ export function RatingForm({
 
   return (
     <div>
-      <div
-        style={{
-          margin: "28px 0 4px",
-          paddingTop: 24,
-          borderTop: "1px solid var(--border-dim)",
-        }}
-      >
-        <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--text-faint)" }}>
-          Rate this game
+      {showHeading && (
+        <div
+          style={{
+            margin: "28px 0 4px",
+            paddingTop: 24,
+            borderTop: "1px solid var(--border-dim)",
+          }}
+        >
+          <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--text-faint)" }}>
+            Rate this game
+          </div>
         </div>
-      </div>
+      )}
 
-      {AXES.map((axis) => (
+      {!locked && AXES.map((axis) => (
         <div key={axis} style={{ margin: "30px 0 34px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: 16 }}>
             <div>
@@ -195,85 +208,91 @@ export function RatingForm({
         </div>
       ))}
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          marginTop: 16,
-          paddingTop: 24,
-          borderTop: "1px solid var(--border-dim)",
-        }}
-      >
-        <button
-          onClick={submit}
-          disabled={submitting}
+      {!locked && (
+        <div
           style={{
-            border: "none",
-            cursor: "pointer",
-            fontWeight: 800,
-            fontSize: 13,
-            letterSpacing: ".08em",
-            padding: "15px 30px",
-            borderRadius: 5,
-            color: "var(--bg)",
-            background: "linear-gradient(90deg, var(--micro), var(--meso), var(--macro))",
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            marginTop: 16,
+            paddingTop: 24,
+            borderTop: "1px solid var(--border-dim)",
           }}
         >
-          {submitting ? "SAVING…" : result ? "UPDATE RATING" : "SUBMIT RATING"}
-        </button>
-        {secondaryAction && (
           <button
-            onClick={secondaryAction.onClick}
+            onClick={submit}
+            disabled={submitting}
             style={{
+              border: "none",
               cursor: "pointer",
-              fontWeight: 700,
-              fontSize: 12,
-              letterSpacing: ".06em",
-              padding: "14px 20px",
+              fontWeight: 800,
+              fontSize: 13,
+              letterSpacing: ".08em",
+              padding: "15px 30px",
               borderRadius: 5,
-              color: "var(--text-dim)",
-              background: "transparent",
-              border: "1px solid var(--border)",
+              color: "var(--bg)",
+              background: "linear-gradient(90deg, var(--micro), var(--meso), var(--macro))",
             }}
           >
-            {secondaryAction.label}
+            {submitting ? "SAVING…" : result ? "UPDATE RATING" : "SUBMIT RATING"}
           </button>
-        )}
-      </div>
+          {secondaryAction && (
+            <button
+              onClick={secondaryAction.onClick}
+              style={{
+                cursor: "pointer",
+                fontWeight: 700,
+                fontSize: 12,
+                letterSpacing: ".06em",
+                padding: "14px 20px",
+                borderRadius: 5,
+                color: "var(--text-dim)",
+                background: "transparent",
+                border: "1px solid var(--border)",
+              }}
+            >
+              {secondaryAction.label}
+            </button>
+          )}
+        </div>
+      )}
 
-      {needsAuth && (
+      {!locked && needsAuth && (
         <div
           style={{
             marginTop: 14,
             fontSize: 12.5,
             color: "var(--text-dim)",
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
           }}
         >
-          <span>Connect Steam to save this rating.</span>
           {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- full navigation into a route handler, not a page */}
           <a href="/api/auth/steam" style={{ fontWeight: 700, color: "var(--meso)", textDecoration: "underline" }}>
-            CONNECT STEAM
-          </a>
+            Connect Steam
+          </a>{" "}
+          to track your ratings.
         </div>
       )}
 
       {(result || alreadyRated) && (
-        <div style={{ marginTop: 30 }}>
-          <h3
-            style={{
-              fontSize: 12,
-              letterSpacing: ".18em",
-              textTransform: "uppercase",
-              color: "var(--macro)",
-              marginBottom: 16,
-            }}
-          >
-            ✓ Your rating vs the crowd
-          </h3>
+        <div style={{ marginTop: locked ? 0 : 30 }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <h3
+              style={{
+                fontSize: 12,
+                letterSpacing: ".18em",
+                textTransform: "uppercase",
+                color: "var(--macro)",
+                marginBottom: 16,
+              }}
+            >
+              ✓ Your rating vs the crowd
+            </h3>
+            {typeof crowd?.ratingCount === "number" && (
+              <span style={{ fontSize: 11, color: "var(--text-faint)" }}>
+                {crowd.ratingCount} {crowd.ratingCount === 1 ? "rating" : "ratings"}
+              </span>
+            )}
+          </div>
           {AXES.map((axis) => {
             const mine = result ?? initial;
             const crowdValue = crowd?.[axis] ?? null;
@@ -326,6 +345,28 @@ export function RatingForm({
             );
           })}
         </div>
+      )}
+
+      {locked && secondaryAction && (
+        <button
+          onClick={secondaryAction.onClick}
+          style={{
+            display: "block",
+            width: "100%",
+            marginTop: 26,
+            border: "none",
+            cursor: "pointer",
+            fontWeight: 800,
+            fontSize: 13,
+            letterSpacing: ".08em",
+            padding: "15px 30px",
+            borderRadius: 5,
+            color: "var(--bg)",
+            background: "linear-gradient(90deg, var(--micro), var(--meso), var(--macro))",
+          }}
+        >
+          NEXT GAME →
+        </button>
       )}
     </div>
   );

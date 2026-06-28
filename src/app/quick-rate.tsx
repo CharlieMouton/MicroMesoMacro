@@ -6,7 +6,7 @@ import { RatingForm } from "./games/[id]/rating-form";
 
 interface GameDetail {
   game: { id: string; title: string; headerImage: string | null };
-  crowdAverage: { micro: number | null; meso: number | null; macro: number | null };
+  crowdAverage: { micro: number | null; meso: number | null; macro: number | null; ratingCount: number };
   ownRating: { micro: number; meso: number; macro: number } | null;
 }
 
@@ -90,7 +90,7 @@ export function QuickRate({ signedIn }: { signedIn: boolean }) {
         </div>
         <div>
           <div style={{ fontSize: 11, letterSpacing: ".14em", color: "var(--text-faint)", textTransform: "uppercase" }}>
-            Quick rate
+            Rate this game
           </div>
           <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{game.title}</div>
         </div>
@@ -103,6 +103,8 @@ export function QuickRate({ signedIn }: { signedIn: boolean }) {
         crowdAverage={ownRating ? crowdAverage : null}
         alreadyRated={!!ownRating}
         signedIn={signedIn}
+        showHeading={false}
+        lockAfterSubmit
         secondaryAction={{ label: "SKIP", onClick: skip }}
       />
     </div>
