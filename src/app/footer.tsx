@@ -10,10 +10,14 @@ export function Footer() {
         textAlign: "center",
       }}
     >
-      {/* TODO: replace with the real creator name + video URL */}
       Inspired by{" "}
-      <a href="#" style={{ color: "var(--text-dim)", textDecoration: "underline" }}>
-        [YOUTUBER NAME]&apos;s video
+      <a
+        href="https://www.youtube.com/watch?v=NgHvdCcmQ4o"
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ color: "var(--text-dim)", textDecoration: "underline" }}
+      >
+        Surnex&apos;s video
       </a>
       .
     </footer>
