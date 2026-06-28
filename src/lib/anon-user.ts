@@ -39,3 +39,37 @@ export async function peekAnonUserId(): Promise<string | null> {
   const user = await prisma.user.findUnique({ where: { anonId }, select: { id: true } });
   return user?.id ?? null;
 }
+
+/**
+ * Called right after a Steam login resolves to a real User. Folds any
+ * ratings made anonymously in this browser into that account: a rating the
+ * real account doesn't already have for that game is moved over; one it
+ * already has is left alone (the connected account's rating wins). The
+ * now-empty shadow account and its cookie are then cleaned up.
+ */
+export async function mergeAnonRatingsInto(userId: string): Promise<void> {
+  const jar = await cookies();
+  const anonId = jar.get(COOKIE_NAME)?.value;
+  if (!anonId) return;
+
+  const anonUser = await prisma.user.findUnique({ where: { anonId }, select: { id: true } });
+  if (!anonUser || anonUser.id === userId) return;
+
+  const anonRatings = await prisma.rating.findMany({ where: { userId: anonUser.id } });
+  if (anonRatings.length > 0) {
+    await prisma.$transaction(
+      anonRatings.map((r) =>
+        prisma.rating.upsert({
+          where: { userId_gameId: { userId, gameId: r.gameId } },
+          update: {},
+          create: { userId, gameId: r.gameId, micro: r.micro, meso: r.meso, macro: r.macro },
+        })
+      )
+    );
+  }
+
+  // Cascades: any anon ratings that weren't moved (because the real account
+  // already had one for that game) are dropped along with the shadow user.
+  await prisma.user.delete({ where: { id: anonUser.id } });
+  jar.delete(COOKIE_NAME);
+}

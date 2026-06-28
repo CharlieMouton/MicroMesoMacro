@@ -5,6 +5,7 @@ import { signIn } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { syncSteamLibrary } from "@/lib/sync-steam-library";
 import { createSteamTicket } from "@/lib/steam-ticket";
+import { mergeAnonRatingsInto } from "@/lib/anon-user";
 
 export async function GET(request: NextRequest) {
   // Deliberately not falling back to `new URL(request.url).origin` here:
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
   // it's guaranteed to exist by the time signIn() above resolves.
   const user = await prisma.user.findUnique({ where: { steamId } });
   if (user) {
+    await mergeAnonRatingsInto(user.id);
     await syncSteamLibrary(user.id, steamId);
   }
 

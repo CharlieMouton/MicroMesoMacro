@@ -248,7 +248,7 @@ export function RatingForm({
       )}
 
       {(result || alreadyRated) && (
-        <div style={{ marginTop: locked ? 0 : 30 }}>
+        <div style={{ marginTop: locked ? 22 : 30 }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <h3
               style={{
