@@ -122,10 +122,17 @@ function GameCard({
   crowd,
   ownRating,
 }: {
-  game: { id: string; title: string; headerImage: string | null };
+  game: { id: string; title: string; headerImage: string | null; steamAppId: number | null };
   crowd: { micro: number | null; meso: number | null; macro: number | null };
   ownRating: { micro: number; meso: number; macro: number } | null;
 }) {
+  // The library card's image slot is a wide landscape banner. IGDB's cover
+  // art (headerImage) is portrait, so object-fit: cover on it here crops
+  // most of the art away — Steam's own header.jpg is the right ratio (460x215).
+  const bannerImage = game.steamAppId
+    ? `https://cdn.akamai.steamstatic.com/steam/apps/${game.steamAppId}/header.jpg`
+    : game.headerImage;
+
   const initials = game.title
     .replace(/[^A-Za-z0-9 ]/g, "")
     .split(" ")
@@ -148,7 +155,7 @@ function GameCard({
     >
       <div
         style={{
-          height: 90,
+          aspectRatio: "460 / 215",
           position: "relative",
           background: "linear-gradient(135deg, var(--micro-dim) -20%, #0e0e14 65%)",
           display: "flex",
@@ -156,14 +163,8 @@ function GameCard({
           padding: 12,
         }}
       >
-        {game.headerImage && (
-          <Image
-            src={game.headerImage}
-            alt=""
-            fill
-            sizes="258px"
-            style={{ objectFit: "cover", objectPosition: "center 20%" }}
-          />
+        {bannerImage && (
+          <Image src={bannerImage} alt="" fill sizes="258px" style={{ objectFit: "cover" }} />
         )}
         <div style={{ position: "absolute", top: 10, right: 11 }}>
           {ownRating ? (
@@ -196,7 +197,7 @@ function GameCard({
             </span>
           )}
         </div>
-        {!game.headerImage && (
+        {!bannerImage && (
           <div style={{ fontSize: 30, fontWeight: 800, color: "rgba(255,255,255,.13)", letterSpacing: "-.02em" }}>
             {initials}
           </div>
