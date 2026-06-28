@@ -31,7 +31,7 @@ export default async function GamePage({
   return (
     <main style={{ maxWidth: 860, margin: "0 auto", padding: "34px 40px 80px" }}>
       <Link
-        href="/"
+        href="/library"
         style={{
           fontSize: 12,
           letterSpacing: ".1em",
@@ -75,11 +75,18 @@ export default async function GamePage({
             ? { micro: ownRating.micro, meso: ownRating.meso, macro: ownRating.macro }
             : { micro: 50, meso: 50, macro: 50 }
         }
-        crowdAverage={{
-          micro: aggregate._avg.micro,
-          meso: aggregate._avg.meso,
-          macro: aggregate._avg.macro,
-        }}
+        // Crowd ratings stay hidden until the viewer has rated this game
+        // themselves — submitting unlocks it via a follow-up fetch.
+        crowdAverage={
+          ownRating
+            ? {
+                micro: aggregate._avg.micro,
+                meso: aggregate._avg.meso,
+                macro: aggregate._avg.macro,
+              }
+            : null
+        }
+        alreadyRated={!!ownRating}
       />
     </main>
   );

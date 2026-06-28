@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 const OPTIONS = [
   { value: "hours", label: "Hours played" },
@@ -9,12 +9,13 @@ const OPTIONS = [
 
 export function SortSelect({ value }: { value: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   function onChange(next: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("sort", next);
-    router.push(`/?${params.toString()}`);
+    router.push(`${pathname}?${params.toString()}`);
   }
 
   return (

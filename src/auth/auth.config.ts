@@ -1,12 +1,20 @@
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { prisma } from "@/lib/prisma";
+import { verifySteamTicket } from "@/lib/steam-ticket";
 
 /**
  * Steam has no OAuth provider — login is via OpenID 2.0, verified manually in
  * /api/auth/steam. That route confirms the steamid with Steam directly, then
- * calls signIn("steam", { steamId, name, image }) so this Credentials
- * provider only ever receives an already-verified identity.
+ * mints a short-lived signed ticket via createSteamTicket() and calls
+ * signIn("steam", { ticket }).
+ *
+ * We deliberately do NOT accept a raw steamId/name/image here: NextAuth's
+ * Credentials provider exposes a public POST endpoint
+ * (/api/auth/callback/steam) that anyone can call directly, so trusting
+ * unsigned input would let an attacker log in as any steamId they choose.
+ * The ticket's HMAC signature (src/lib/steam-ticket.ts) is what actually
+ * proves this request came from our own verified OpenID callback.
  */
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
@@ -15,21 +23,19 @@ export const authConfig: NextAuthConfig = {
       id: "steam",
       name: "Steam",
       credentials: {
-        steamId: { label: "Steam ID" },
-        name: { label: "Name" },
-        image: { label: "Image" },
+        ticket: { label: "Ticket" },
       },
       async authorize(credentials) {
-        const steamId = credentials?.steamId;
-        if (typeof steamId !== "string" || !steamId) return null;
+        const ticket = credentials?.ticket;
+        if (typeof ticket !== "string" || !ticket) return null;
 
-        const name = typeof credentials.name === "string" ? credentials.name : undefined;
-        const image = typeof credentials.image === "string" ? credentials.image : undefined;
+        const payload = verifySteamTicket(ticket);
+        if (!payload) return null;
 
         const user = await prisma.user.upsert({
-          where: { steamId },
-          update: { name, image },
-          create: { steamId, name, image },
+          where: { steamId: payload.steamId },
+          update: { name: payload.name, image: payload.image },
+          create: { steamId: payload.steamId, name: payload.name, image: payload.image },
         });
 
         return { id: user.id, name: user.name, image: user.image };

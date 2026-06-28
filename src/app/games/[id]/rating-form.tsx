@@ -8,15 +8,18 @@ export function RatingForm({
   gameId,
   initial,
   crowdAverage,
+  alreadyRated,
 }: {
   gameId: string;
   initial: Record<Axis, number>;
-  crowdAverage: Record<Axis, number | null>;
+  crowdAverage: Record<Axis, number | null> | null;
+  alreadyRated: boolean;
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initial);
   const [dragAxis, setDragAxis] = useState<Axis | null>(null);
   const [result, setResult] = useState<Record<Axis, number> | null>(null);
+  const [crowd, setCrowd] = useState(crowdAverage);
   const [submitting, setSubmitting] = useState(false);
   const refs: Record<Axis, React.RefObject<HTMLDivElement | null>> = {
     micro: useRef(null),
@@ -64,11 +67,18 @@ export function RatingForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gameId, ...draft }),
     });
-    setSubmitting(false);
     if (res.ok) {
       setResult(draft);
+      // Crowd average is hidden from the GET route until the caller has a
+      // rating on file — now that we've just submitted one, re-fetch it.
+      const detail = await fetch(`/api/games/${gameId}`);
+      if (detail.ok) {
+        const data = await detail.json();
+        setCrowd(data.crowdAverage);
+      }
       router.refresh();
     }
+    setSubmitting(false);
   }
 
   return (
@@ -86,6 +96,9 @@ export function RatingForm({
         <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--text-faint)" }}>
           Rate this game
         </div>
+        {!alreadyRated && !result && (
+          <div style={{ fontSize: 12, color: "var(--text-faint)" }}>⊘ crowd hidden until you submit</div>
+        )}
       </div>
 
       {AXES.map((axis) => (
@@ -201,7 +214,7 @@ export function RatingForm({
         </button>
       </div>
 
-      {result && (
+      {(result || alreadyRated) && (
         <div style={{ marginTop: 30 }}>
           <h3
             style={{
@@ -212,11 +225,12 @@ export function RatingForm({
               marginBottom: 16,
             }}
           >
-            ✓ Rating locked — vs the crowd
+            ✓ Your rating vs the crowd
           </h3>
           {AXES.map((axis) => {
-            const crowd = crowdAverage[axis];
-            const delta = crowd != null ? result[axis] - crowd : null;
+            const mine = result ?? initial;
+            const crowdValue = crowd?.[axis] ?? null;
+            const delta = crowdValue != null ? mine[axis] - crowdValue : null;
             const deltaColor = delta == null ? "var(--text-dim)" : delta > 0 ? `var(--${axis})` : "var(--text-dim)";
             return (
               <div key={axis} style={{ marginTop: 18 }}>
@@ -245,20 +259,20 @@ export function RatingForm({
                       left: 0,
                       top: 0,
                       bottom: 0,
-                      width: `${result[axis]}%`,
+                      width: `${mine[axis]}%`,
                       background: `linear-gradient(90deg, var(--${axis}-dim), var(--${axis}))`,
                     }}
                   />
-                  {crowd != null && (
-                    <div style={{ position: "absolute", top: 0, bottom: 0, left: `${crowd}%`, width: 2, background: "var(--text)" }} />
+                  {crowdValue != null && (
+                    <div style={{ position: "absolute", top: 0, bottom: 0, left: `${crowdValue}%`, width: 2, background: "var(--text)" }} />
                   )}
                 </div>
                 <div style={{ display: "flex", gap: 18, marginTop: 8, fontSize: 12, color: "var(--text-dim)" }}>
                   <span>
-                    YOU <b style={{ color: `var(--${axis})` }}>{result[axis]}</b>
+                    YOU <b style={{ color: `var(--${axis})` }}>{mine[axis]}</b>
                   </span>
                   <span>
-                    CROWD <b style={{ color: "var(--text)" }}>{crowd?.toFixed(1) ?? "—"}</b>
+                    CROWD <b style={{ color: "var(--text)" }}>{crowdValue?.toFixed(1) ?? "—"}</b>
                   </span>
                 </div>
               </div>

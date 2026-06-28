@@ -27,12 +27,16 @@ export async function GET(
       : null,
   ]);
 
+  // Crowd ratings stay hidden from anyone who hasn't rated this game
+  // themselves yet, to encourage rating before peeking at the consensus.
+  const canSeeCrowd = !!ownRating;
+
   return NextResponse.json({
     game,
     crowdAverage: {
-      micro: aggregate._avg.micro ?? null,
-      meso: aggregate._avg.meso ?? null,
-      macro: aggregate._avg.macro ?? null,
+      micro: canSeeCrowd ? aggregate._avg.micro ?? null : null,
+      meso: canSeeCrowd ? aggregate._avg.meso ?? null : null,
+      macro: canSeeCrowd ? aggregate._avg.macro ?? null : null,
       ratingCount: count,
     },
     ownRating,
