@@ -1,35 +1,17 @@
 import { Wordmark } from "../wordmark";
 import { AXIS_COPY, AXES } from "@/lib/axes";
 
-const CHEAT_HINTS: Record<string, string> = {
-  micro:
-    "A quick test: if you could cheat at this game, would you want an aimbot, perfect reflexes, or frame-perfect inputs? That's Micro.",
-  meso:
-    "A quick test: would your cheat be seeing through the fog of war, knowing the opponent's hand, or always knowing the odds? That's Meso.",
-  macro:
-    "A quick test: would your cheat be knowing the optimal build order, the winning line ten moves out, or the whole map ahead of time? That's Macro.",
-};
-
 export default function AboutPage() {
   return (
     <main style={{ maxWidth: 700, margin: "0 auto", padding: "48px 24px 64px" }}>
       <Wordmark size={36} />
       <p style={{ marginTop: 20, color: "var(--text-dim)", fontSize: 15, lineHeight: 1.7 }}>
-        Every game asks something different of you. MiMeMa breaks that down into three axes, and lets
-        you rate any game against them — then shows you how your read compares to everyone else who has.
+        Every game asks something different of you. I was curious to explore how the games I play fall across the experience of micro, meso, and macro play. I couldn&apos;t find a resource for that, so created this tool that lets
+        you rate any game against this framework — then shows you how your analysis compares to everyone else.
       </p>
 
       <p style={{ marginTop: 18, color: "var(--text-dim)", fontSize: 14.5, lineHeight: 1.7 }}>
-        One way to figure out which axis a game leans on, borrowed from{" "}
-        <a
-          href="https://www.youtube.com/watch?v=NgHvdCcmQ4o"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ color: "var(--text)", textDecoration: "underline" }}
-        >
-          the video that inspired this site
-        </a>
-        : imagine you could cheat at it. What would you actually want the cheat to do for you? Faster
+         When trying to place a game, imagine what cheats would make the game trivial. What would you actually want the cheat to do for you? Faster
         hands and pinpoint aim is a Micro cheat. Knowing exactly what your opponent has, or the true odds
         of a play working, is a Meso cheat. Knowing the optimal plan from start to finish is a Macro
         cheat. Most games lean on more than one axis — the question is which one your cheat would target
@@ -47,9 +29,6 @@ export default function AboutPage() {
             </div>
             <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
               {AXIS_COPY[axis].description}
-            </p>
-            <p style={{ color: "var(--text-faint)", fontSize: 12.5, marginTop: 8, lineHeight: 1.6 }}>
-              {CHEAT_HINTS[axis]}
             </p>
           </div>
         ))}
