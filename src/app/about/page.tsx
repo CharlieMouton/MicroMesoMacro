@@ -1,6 +1,14 @@
-import Link from "next/link";
 import { Wordmark } from "../wordmark";
 import { AXIS_COPY, AXES } from "@/lib/axes";
+
+const CHEAT_HINTS: Record<string, string> = {
+  micro:
+    "A quick test: if you could cheat at this game, would you want an aimbot, perfect reflexes, or frame-perfect inputs? That's Micro.",
+  meso:
+    "A quick test: would your cheat be seeing through the fog of war, knowing the opponent's hand, or always knowing the odds? That's Meso.",
+  macro:
+    "A quick test: would your cheat be knowing the optimal build order, the winning line ten moves out, or the whole map ahead of time? That's Macro.",
+};
 
 export default function AboutPage() {
   return (
@@ -11,14 +19,37 @@ export default function AboutPage() {
         you rate any game against them — then shows you how your read compares to everyone else who has.
       </p>
 
-      <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 20 }}>
+      <p style={{ marginTop: 18, color: "var(--text-dim)", fontSize: 14.5, lineHeight: 1.7 }}>
+        One way to figure out which axis a game leans on, borrowed from{" "}
+        <a
+          href="https://www.youtube.com/watch?v=NgHvdCcmQ4o"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: "var(--text)", textDecoration: "underline" }}
+        >
+          the video that inspired this site
+        </a>
+        : imagine you could cheat at it. What would you actually want the cheat to do for you? Faster
+        hands and pinpoint aim is a Micro cheat. Knowing exactly what your opponent has, or the true odds
+        of a play working, is a Meso cheat. Knowing the optimal plan from start to finish is a Macro
+        cheat. Most games lean on more than one axis — the question is which one your cheat would target
+        first.
+      </p>
+
+      <div style={{ marginTop: 32, display: "flex", flexDirection: "column", gap: 22 }}>
         {AXES.map((axis) => (
           <div key={axis} style={{ borderLeft: `2px solid var(--${axis})`, paddingLeft: 16 }}>
             <div style={{ color: `var(--${axis})`, fontSize: 16, fontWeight: 800 }}>
-              {AXIS_COPY[axis].label.toUpperCase()} <span style={{ color: "var(--text-faint)", fontWeight: 500, fontSize: 12 }}>{AXIS_COPY[axis].tag}</span>
+              {AXIS_COPY[axis].label.toUpperCase()}{" "}
+              <span style={{ color: "var(--text-faint)", fontWeight: 500, fontSize: 12 }}>
+                {AXIS_COPY[axis].tag}
+              </span>
             </div>
             <p style={{ color: "var(--text-dim)", fontSize: 13, marginTop: 6, lineHeight: 1.6 }}>
               {AXIS_COPY[axis].description}
+            </p>
+            <p style={{ color: "var(--text-faint)", fontSize: 12.5, marginTop: 8, lineHeight: 1.6 }}>
+              {CHEAT_HINTS[axis]}
             </p>
           </div>
         ))}
@@ -50,48 +81,6 @@ export default function AboutPage() {
           </li>
         </ol>
       </section>
-
-      <section style={{ marginTop: 36 }}>
-        <h3 style={sectionHeadingStyle}>Why ratings stay hidden until you rate</h3>
-        <p style={{ color: "var(--text-dim)", fontSize: 13.5, marginTop: 10, lineHeight: 1.7 }}>
-          Seeing the crowd&apos;s number before you&apos;ve formed your own opinion tends to anchor your
-          rating to theirs, instead of reflecting how you actually read the game. So the crowd average for
-          a game — on the library grid, the game page, and the quick-rate widget — stays locked until
-          you&apos;ve submitted your own rating for that specific game. Submit once, and it unlocks
-          immediately, including a comparison of your numbers against the crowd&apos;s.
-        </p>
-      </section>
-
-      <section style={{ marginTop: 36 }}>
-        <h3 style={sectionHeadingStyle}>What&apos;s the &ldquo;quick rate&rdquo; suggestion picking?</h3>
-        <p style={{ color: "var(--text-dim)", fontSize: 13.5, marginTop: 10, lineHeight: 1.7 }}>
-          If you&apos;ve linked Steam, it prefers games already in your library that you haven&apos;t rated
-          yet. Once you&apos;ve rated everything you own, it falls back to popular games across the whole
-          site. Either way, it&apos;s sampled randomly from the most-rated 20 candidates in that pool — so
-          you&apos;ll usually see something with a real crowd average worth comparing against, rather than
-          an obscure title nobody else has rated.
-        </p>
-      </section>
-
-      <section style={{ marginTop: 36 }}>
-        <h3 style={sectionHeadingStyle}>What&apos;s not here yet</h3>
-        <p style={{ color: "var(--text-dim)", fontSize: 13.5, marginTop: 10, lineHeight: 1.7 }}>
-          This is an early version. A few things from the original plan are intentionally not built yet:
-          a personal &ldquo;bias&rdquo; profile showing how your ratings consistently lean compared to the
-          crowd, an archetype label derived from that bias, similar-game recommendations, advanced search
-          by tag and slider range, classic non-Steam games (chess, board games, etc.), and email-based
-          login as an alternative to Steam. They&apos;re on the roadmap, just not live.
-        </p>
-      </section>
-
-      <p style={{ marginTop: 40 }}>
-        <Link
-          href="/"
-          style={{ fontSize: 12, fontWeight: 700, letterSpacing: ".06em", color: "var(--text-dim)" }}
-        >
-          ← BACK TO HOME
-        </Link>
-      </p>
     </main>
   );
 }
