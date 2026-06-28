@@ -2,11 +2,17 @@ import Link from "next/link";
 import { auth } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { SyncButton } from "./sync-button";
+import { SortSelect } from "./sort-select";
 import { Wordmark } from "./wordmark";
 import { AXIS_COPY, type Axis } from "@/lib/axes";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
   const session = await auth();
+  const { sort = "hours" } = await searchParams;
 
   if (!session?.user?.id) {
     return (
@@ -121,8 +127,12 @@ export default async function HomePage() {
           where: { userId_gameId: { userId: session.user.id, gameId: game.id } },
         }),
       ]);
-      return { game, crowd: aggregate._avg, ownRating };
+      return { game, crowd: aggregate._avg, ownRating, playtimeMins: owned.playtimeMins ?? 0 };
     })
+  );
+
+  rows.sort((a, b) =>
+    sort === "alpha" ? a.game.title.localeCompare(b.game.title) : b.playtimeMins - a.playtimeMins
   );
 
   return (
@@ -137,7 +147,10 @@ export default async function HomePage() {
             </span>
           </h2>
         </div>
-        <SyncButton />
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <SortSelect value={sort} />
+          <SyncButton />
+        </div>
       </div>
 
       <div
