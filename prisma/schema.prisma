@@ -14,6 +14,9 @@ model User {
   emailVerified DateTime?
   image         String?
   steamId       String?   @unique
+  // Identifies a guest "shadow" account tied to a browser cookie, so
+  // anonymous visitors can submit ratings without connecting Steam.
+  anonId        String?   @unique
   accounts      Account[]
   sessions      Session[]
   ratings       Rating[]

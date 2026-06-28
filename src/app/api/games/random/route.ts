@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
+import { peekAnonUserId } from "@/lib/anon-user";
 
 // Bias toward popularity by sampling randomly from the N most-rated
 // candidates, rather than a uniform random pick across the whole table.
@@ -8,7 +9,7 @@ const POPULARITY_POOL_SIZE = 20;
 
 export async function GET() {
   const session = await auth();
-  const userId = session?.user?.id;
+  const userId = session?.user?.id ?? (await peekAnonUserId());
 
   // Anonymous visitors can still get a (less personalized) suggestion —
   // they just don't have a rated/owned-games history to bias against.

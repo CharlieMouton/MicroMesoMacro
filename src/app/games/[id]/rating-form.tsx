@@ -9,7 +9,6 @@ export function RatingForm({
   initial,
   crowdAverage,
   alreadyRated,
-  signedIn = true,
   showHeading = true,
   lockAfterSubmit = false,
   secondaryAction,
@@ -18,10 +17,6 @@ export function RatingForm({
   initial: Record<Axis, number>;
   crowdAverage: (Record<Axis, number | null> & { ratingCount?: number }) | null;
   alreadyRated: boolean;
-  /** Sliders work for anonymous visitors too; only saving requires a Steam
-   * login (ratings are stored per-user). Defaults to true for callers that
-   * are always behind an auth gate (the game detail page). */
-  signedIn?: boolean;
   /** The game detail page has no other heading above the form; quick-rate
    * shows its own heading above the game title instead, so it passes false. */
   showHeading?: boolean;
@@ -39,7 +34,6 @@ export function RatingForm({
   const [result, setResult] = useState<Record<Axis, number> | null>(null);
   const [crowd, setCrowd] = useState(crowdAverage);
   const [submitting, setSubmitting] = useState(false);
-  const [needsAuth, setNeedsAuth] = useState(false);
   const [locked, setLocked] = useState(false);
   const refs: Record<Axis, React.RefObject<HTMLDivElement | null>> = {
     micro: useRef(null),
@@ -81,19 +75,15 @@ export function RatingForm({
   }
 
   async function submit() {
-    if (!signedIn) {
-      setNeedsAuth(true);
-      return;
-    }
     setSubmitting(true);
+    // Anonymous visitors save too — /api/ratings mints a cookie-backed
+    // guest identity for them if there's no Steam session.
     const res = await fetch("/api/ratings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ gameId, ...draft }),
     });
-    if (res.status === 401) {
-      setNeedsAuth(true);
-    } else if (res.ok) {
+    if (res.ok) {
       setResult(draft);
       // Crowd average is hidden from the GET route until the caller has a
       // rating on file — now that we've just submitted one, re-fetch it.
@@ -254,22 +244,6 @@ export function RatingForm({
               {secondaryAction.label}
             </button>
           )}
-        </div>
-      )}
-
-      {!locked && needsAuth && (
-        <div
-          style={{
-            marginTop: 14,
-            fontSize: 12.5,
-            color: "var(--text-dim)",
-          }}
-        >
-          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- full navigation into a route handler, not a page */}
-          <a href="/api/auth/steam" style={{ fontWeight: 700, color: "var(--meso)", textDecoration: "underline" }}>
-            Connect Steam
-          </a>{" "}
-          to track your ratings.
         </div>
       )}
 

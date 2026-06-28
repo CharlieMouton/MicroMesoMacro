@@ -10,7 +10,7 @@ interface GameDetail {
   ownRating: { micro: number; meso: number; macro: number } | null;
 }
 
-export function QuickRate({ signedIn }: { signedIn: boolean }) {
+export function QuickRate() {
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [exhausted, setExhausted] = useState(false);
@@ -102,7 +102,6 @@ export function QuickRate({ signedIn }: { signedIn: boolean }) {
         initial={ownRating ? { micro: ownRating.micro, meso: ownRating.meso, macro: ownRating.macro } : { micro: 50, meso: 50, macro: 50 }}
         crowdAverage={ownRating ? crowdAverage : null}
         alreadyRated={!!ownRating}
-        signedIn={signedIn}
         showHeading={false}
         lockAfterSubmit
         secondaryAction={{ label: "SKIP", onClick: skip }}

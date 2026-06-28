@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
+import { peekAnonUserId } from "@/lib/anon-user";
 
 export async function GET(
   _request: Request,
@@ -8,6 +9,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const session = await auth();
+  const userId = session?.user?.id ?? (await peekAnonUserId());
 
   const game = await prisma.game.findUnique({ where: { id } });
   if (!game) {
@@ -20,9 +22,9 @@ export async function GET(
       _avg: { micro: true, meso: true, macro: true },
     }),
     prisma.rating.count({ where: { gameId: id } }),
-    session?.user?.id
+    userId
       ? prisma.rating.findUnique({
-          where: { userId_gameId: { userId: session.user.id, gameId: id } },
+          where: { userId_gameId: { userId, gameId: id } },
         })
       : null,
   ]);

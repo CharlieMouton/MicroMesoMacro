@@ -1,12 +1,9 @@
 import Link from "next/link";
-import { auth } from "@/auth/auth";
 import { Wordmark } from "./wordmark";
 import { SearchBar } from "./search-bar";
 import { QuickRate } from "./quick-rate";
 
-export default async function HomePage() {
-  const session = await auth();
-
+export default function HomePage() {
   return (
     <main
       style={{
@@ -59,7 +56,7 @@ export default async function HomePage() {
         </div>
 
         <div style={{ marginTop: 24 }}>
-          <QuickRate signedIn={!!session?.user?.id} />
+          <QuickRate />
         </div>
       </div>
     </main>

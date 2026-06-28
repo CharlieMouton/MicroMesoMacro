@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth/auth";
 import { prisma } from "@/lib/prisma";
 import { ratingInputSchema } from "@/lib/validation";
+import { getOrCreateAnonUserId } from "@/lib/anon-user";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  // Anonymous visitors can still rate — they get a cookie-backed guest
+  // identity instead of a real Steam-linked account.
+  const userId = session?.user?.id ?? (await getOrCreateAnonUserId());
 
   let body: unknown;
   try {
@@ -29,9 +30,9 @@ export async function POST(request: NextRequest) {
   }
 
   const rating = await prisma.rating.upsert({
-    where: { userId_gameId: { userId: session.user.id, gameId } },
+    where: { userId_gameId: { userId, gameId } },
     update: { micro, meso, macro },
-    create: { userId: session.user.id, gameId, micro, meso, macro },
+    create: { userId, gameId, micro, meso, macro },
   });
 
   return NextResponse.json(rating);

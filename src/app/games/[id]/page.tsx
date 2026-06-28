@@ -3,6 +3,7 @@ import Image from "next/image";
 import { RatingForm } from "./rating-form";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth/auth";
+import { peekAnonUserId } from "@/lib/anon-user";
 import { notFound } from "next/navigation";
 
 export default async function GamePage({
@@ -12,6 +13,7 @@ export default async function GamePage({
 }) {
   const { id } = await params;
   const session = await auth();
+  const userId = session?.user?.id ?? (await peekAnonUserId());
 
   const game = await prisma.game.findUnique({ where: { id } });
   if (!game) notFound();
@@ -22,9 +24,9 @@ export default async function GamePage({
       _avg: { micro: true, meso: true, macro: true },
     }),
     prisma.rating.count({ where: { gameId: id } }),
-    session?.user?.id
+    userId
       ? prisma.rating.findUnique({
-          where: { userId_gameId: { userId: session.user.id, gameId: id } },
+          where: { userId_gameId: { userId, gameId: id } },
         })
       : null,
   ]);
@@ -89,7 +91,6 @@ export default async function GamePage({
             : null
         }
         alreadyRated={!!ownRating}
-        signedIn={!!session?.user?.id}
       />
     </main>
   );
