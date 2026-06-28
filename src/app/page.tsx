@@ -3,7 +3,6 @@ import { auth } from "@/auth/auth";
 import { Wordmark } from "./wordmark";
 import { SearchBar } from "./search-bar";
 import { QuickRate } from "./quick-rate";
-import { AXIS_COPY, type Axis } from "@/lib/axes";
 
 export default async function HomePage() {
   const session = await auth();
@@ -98,29 +97,22 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div style={{ display: "flex", gap: 14, marginTop: 34, flexWrap: "wrap" }}>
-          {(Object.keys(AXIS_COPY) as Axis[]).map((axis) => (
-            <div
-              key={axis}
-              style={{
-                flex: 1,
-                minWidth: 200,
-                background: "var(--panel)",
-                border: "1px solid var(--border)",
-                borderTop: `2px solid var(--${axis})`,
-                borderRadius: 5,
-                padding: "18px 18px 20px",
-              }}
-            >
-              <span style={{ color: `var(--${axis})`, fontSize: 19, fontWeight: 800, letterSpacing: ".03em" }}>
-                {AXIS_COPY[axis].label.toUpperCase()}
-              </span>
-              <p style={{ color: "#c9c9d4", fontSize: 12.5, lineHeight: 1.55, marginTop: 13 }}>
-                {AXIS_COPY[axis].description}
-              </p>
-            </div>
-          ))}
-        </div>
+        <Link
+          href="/about"
+          style={{
+            display: "block",
+            marginTop: 34,
+            background: "var(--panel)",
+            border: "1px solid var(--border)",
+            borderTop: "2px solid var(--meso)",
+            borderRadius: 5,
+            padding: "18px 18px 20px",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text)" }}>
+            Learn more about the MiMeMa framework →
+          </span>
+        </Link>
       </div>
     </main>
   );

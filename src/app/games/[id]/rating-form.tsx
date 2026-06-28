@@ -92,17 +92,11 @@ export function RatingForm({
           margin: "28px 0 4px",
           paddingTop: 24,
           borderTop: "1px solid var(--border-dim)",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "baseline",
         }}
       >
         <div style={{ fontSize: 12, letterSpacing: ".2em", textTransform: "uppercase", color: "var(--text-faint)" }}>
           Rate this game
         </div>
-        {!alreadyRated && !result && (
-          <div style={{ fontSize: 12, color: "var(--text-faint)" }}>⊘ crowd hidden until you submit</div>
-        )}
       </div>
 
       {AXES.map((axis) => (

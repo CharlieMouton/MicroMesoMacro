@@ -230,7 +230,7 @@ function GameCard({
             borderTop: "1px solid var(--border-dim)",
           }}
         >
-          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{ownRating ? "crowd avg" : "locked"}</span>
+          <span style={{ fontSize: 11, color: "var(--text-faint)" }}>{ownRating ? "crowd avg" : "unrated"}</span>
           <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".08em", color: ownRating ? "var(--macro)" : "var(--meso)" }}>
             {ownRating ? "UPDATE" : "RATE →"}
           </span>
