@@ -12,13 +12,17 @@ This is the **MVP infrastructure scaffold**. Scope is intentionally narrow:
 
 ## Setup
 
-Requires Node ≥20.9 and Docker (or a local Postgres instance) — note: this scaffold was built against Node 20.0.0, which is *below* Next.js/Prisma's stated minimum; upgrade Node before running this for real.
+Requires Node ≥20.9 (this project targets 22 LTS) and a Postgres database — using [Supabase](https://supabase.com) for this (see note below on which connection string to use).
 
-1. `cp .env.example .env` and fill in `STEAM_API_KEY` ([get one here](https://steamcommunity.com/dev/apikey)) and `IGDB_CLIENT_ID`/`IGDB_CLIENT_SECRET` (register a Twitch dev app at [dev.twitch.tv](https://dev.twitch.tv/console/apps), enable IGDB access).
-2. `docker compose up -d` — starts local Postgres.
-3. `npm install`
-4. `npx prisma migrate dev --name init` — creates the schema.
-5. `npm run dev` — open [http://localhost:3000](http://localhost:3000).
+1. `cp .env.example .env` and fill in:
+   - `DATABASE_URL` — your Supabase **session pooler** connection string (Project Settings → Database → Connect → "Session pooler" tab, port `5432`). The **transaction pooler** (port `6543`) does not support the session-level locks `prisma migrate` needs and will hang; the **direct connection** (`db.<ref>.supabase.co:5432`) is IPv6-only and unreachable from many networks. Session pooler is the one that reliably works for both migrations and runtime queries.
+   - `STEAM_API_KEY` ([get one here](https://steamcommunity.com/dev/apikey)).
+   - `IGDB_CLIENT_ID`/`IGDB_CLIENT_SECRET` (register a Twitch dev app at [dev.twitch.tv](https://dev.twitch.tv/console/apps), enable IGDB access).
+2. `npm install`
+3. `npx prisma migrate dev --name init` — creates the schema (only needed once per fresh database; already applied to the project's current Supabase instance).
+4. `npm run dev` — open [http://localhost:3000](http://localhost:3000).
+
+A local Postgres via Docker (`docker-compose.yml`) is included as an alternative if you'd rather not depend on Supabase — swap `DATABASE_URL` to the value in `.env.example`'s commented-out local option and run `docker compose up -d` first.
 
 Sign in via "Connect Steam Library" on the home page (hits `/api/auth/steam`, which does the Steam OpenID 2.0 handshake), then "Sync Steam Library" to pull your owned games.
 
