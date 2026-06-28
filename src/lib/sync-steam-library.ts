@@ -3,8 +3,11 @@ import { getOwnedGames } from "@/lib/steam";
 import { getGameByIgdbId, resolveBySteamAppId } from "@/lib/igdb";
 
 // IGDB enforces 4 req/sec; resolving + fetching a new game costs 2 requests,
-// so cap how many unresolved appids we look up per sync call.
-const MAX_NEW_GAMES_PER_SYNC = 20;
+// so cap how many unresolved appids we look up per sync call. Steam's
+// GetOwnedGames has no meaningful default order, so we sort by playtime
+// first — this cap then means "the N most-played games," not an arbitrary
+// slice of the library.
+const MAX_NEW_GAMES_PER_SYNC = 50;
 
 export async function syncSteamLibrary(userId: string, steamId: string) {
   const library = await prisma.steamLibraryLink.upsert({
@@ -14,7 +17,9 @@ export async function syncSteamLibrary(userId: string, steamId: string) {
   });
 
   try {
-    const ownedGames = await getOwnedGames(steamId);
+    const ownedGames = [...(await getOwnedGames(steamId))].sort(
+      (a, b) => b.playtime_forever - a.playtime_forever
+    );
 
     let newGamesResolved = 0;
     for (const owned of ownedGames) {
