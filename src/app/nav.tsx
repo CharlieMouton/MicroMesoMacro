@@ -20,6 +20,9 @@ export async function Nav() {
         <Link href="/">
           <Wordmark size={20} />
         </Link>
+        <Link href="/" style={navLinkStyle}>
+          Home
+        </Link>
         <Link href="/library" style={navLinkStyle}>
           Library
         </Link>

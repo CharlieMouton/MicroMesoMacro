@@ -2,34 +2,42 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { RatingForm } from "./games/[id]/rating-form";
 
-interface RandomGame {
-  id: string;
-  title: string;
-  headerImage: string | null;
+interface GameDetail {
+  game: { id: string; title: string; headerImage: string | null };
+  crowdAverage: { micro: number | null; meso: number | null; macro: number | null };
+  ownRating: { micro: number; meso: number; macro: number } | null;
 }
 
 export function QuickRate() {
-  const [game, setGame] = useState<RandomGame | null>(null);
+  const [detail, setDetail] = useState<GameDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [exhausted, setExhausted] = useState(false);
   const [requestId, setRequestId] = useState(0);
 
-  // Re-fetches whenever requestId changes (skip bumps it). The fetch/setState
-  // chain lives entirely inside .then() callbacks rather than a separately
-  // invoked async function, which is what react-hooks/set-state-in-effect
-  // wants — it flags effects that call out to a function that sets state,
-  // even when that state update happens after an await.
+  // Two-step fetch (pick a random game, then load its detail) lives entirely
+  // inside .then() callbacks rather than a separately invoked async
+  // function — react-hooks/set-state-in-effect flags effects that call out
+  // to a function that eventually sets state, even after an await.
   useEffect(() => {
     let active = true;
     fetch("/api/games/random")
       .then((res) => res.json())
-      .then((data) => {
+      .then((randomData) => {
         if (!active) return;
-        setGame(data.game);
-        setExhausted(!data.game);
-        setLoading(false);
+        if (!randomData.game) {
+          setExhausted(true);
+          setLoading(false);
+          return;
+        }
+        return fetch(`/api/games/${randomData.game.id}`)
+          .then((res) => res.json())
+          .then((detailData) => {
+            if (!active) return;
+            setDetail(detailData);
+            setLoading(false);
+          });
       });
     return () => {
       active = false;
@@ -38,6 +46,7 @@ export function QuickRate() {
 
   function skip() {
     setLoading(true);
+    setDetail(null);
     setRequestId((id) => id + 1);
   }
 
@@ -49,7 +58,7 @@ export function QuickRate() {
     );
   }
 
-  if (exhausted || !game) {
+  if (exhausted || !detail) {
     return (
       <div style={quickRateBoxStyle}>
         <span style={{ color: "var(--text-faint)", fontSize: 13 }}>
@@ -59,8 +68,10 @@ export function QuickRate() {
     );
   }
 
+  const { game, crowdAverage, ownRating } = detail;
+
   return (
-    <div style={quickRateBoxStyle}>
+    <div style={{ background: "var(--panel)", border: "1px solid var(--border-dim)", borderRadius: 7, padding: 22 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
         <div
           style={{
@@ -81,41 +92,18 @@ export function QuickRate() {
           <div style={{ fontSize: 11, letterSpacing: ".14em", color: "var(--text-faint)", textTransform: "uppercase" }}>
             Quick rate
           </div>
-          <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{game.title}</div>
+          <div style={{ fontSize: 18, fontWeight: 700, marginTop: 2 }}>{game.title}</div>
         </div>
       </div>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button
-          onClick={skip}
-          style={{
-            cursor: "pointer",
-            fontWeight: 700,
-            fontSize: 12,
-            letterSpacing: ".06em",
-            padding: "11px 16px",
-            borderRadius: 5,
-            color: "var(--text-dim)",
-            background: "transparent",
-            border: "1px solid var(--border)",
-          }}
-        >
-          SKIP
-        </button>
-        <Link
-          href={`/games/${game.id}`}
-          style={{
-            fontWeight: 800,
-            fontSize: 12,
-            letterSpacing: ".06em",
-            padding: "11px 18px",
-            borderRadius: 5,
-            color: "var(--bg)",
-            background: "linear-gradient(90deg, var(--micro), var(--meso), var(--macro))",
-          }}
-        >
-          RATE →
-        </Link>
-      </div>
+
+      <RatingForm
+        key={game.id}
+        gameId={game.id}
+        initial={ownRating ? { micro: ownRating.micro, meso: ownRating.meso, macro: ownRating.macro } : { micro: 50, meso: 50, macro: 50 }}
+        crowdAverage={ownRating ? crowdAverage : null}
+        alreadyRated={!!ownRating}
+        secondaryAction={{ label: "SKIP", onClick: skip }}
+      />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth/auth";
 import { Wordmark } from "./wordmark";
 import { SearchBar } from "./search-bar";
@@ -37,6 +38,22 @@ export default async function HomePage() {
           <span style={{ color: "var(--macro)", fontWeight: 700 }}>Macro</span> — then see how your read
           compares to the crowd.
         </p>
+
+        <Link
+          href="/about"
+          style={{
+            display: "inline-block",
+            marginTop: 14,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: ".06em",
+            color: "var(--text-dim)",
+            borderBottom: "1px solid var(--border)",
+            paddingBottom: 2,
+          }}
+        >
+          LEARN MORE →
+        </Link>
 
         <div style={{ marginTop: 28 }}>
           <SearchBar large />

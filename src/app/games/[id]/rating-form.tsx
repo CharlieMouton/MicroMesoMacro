@@ -9,11 +9,15 @@ export function RatingForm({
   initial,
   crowdAverage,
   alreadyRated,
+  secondaryAction,
 }: {
   gameId: string;
   initial: Record<Axis, number>;
   crowdAverage: Record<Axis, number | null> | null;
   alreadyRated: boolean;
+  /** Renders an extra button next to Submit — used by the home page's
+   * "quick rate" widget to put Skip alongside Submit. */
+  secondaryAction?: { label: string; onClick: () => void };
 }) {
   const router = useRouter();
   const [draft, setDraft] = useState(initial);
@@ -212,6 +216,24 @@ export function RatingForm({
         >
           {submitting ? "SAVING…" : result ? "UPDATE RATING" : "SUBMIT RATING"}
         </button>
+        {secondaryAction && (
+          <button
+            onClick={secondaryAction.onClick}
+            style={{
+              cursor: "pointer",
+              fontWeight: 700,
+              fontSize: 12,
+              letterSpacing: ".06em",
+              padding: "14px 20px",
+              borderRadius: 5,
+              color: "var(--text-dim)",
+              background: "transparent",
+              border: "1px solid var(--border)",
+            }}
+          >
+            {secondaryAction.label}
+          </button>
+        )}
       </div>
 
       {(result || alreadyRated) && (
