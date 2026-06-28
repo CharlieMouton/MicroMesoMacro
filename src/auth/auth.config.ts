@@ -18,6 +18,9 @@ import { verifySteamTicket } from "@/lib/steam-ticket";
  */
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
+  // Required behind a reverse proxy (Vercel, or any custom-domain setup) so
+  // Auth.js trusts the Host header it forwards instead of rejecting it.
+  trustHost: true,
   providers: [
     Credentials({
       id: "steam",
