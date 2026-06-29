@@ -3,8 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  // Transaction pooler (PgBouncer) — what the app actually queries through.
+  // Built for many short-lived serverless connections; the session pooler
+  // (DIRECT_URL) only supports 15 concurrent clients, which a handful of
+  // concurrent Vercel function instances can exhaust on their own.
+  url       = env("DATABASE_URL")
+  // Session pooler — only used for `prisma migrate deploy`/`dev`, which
+  // need session-level features the transaction pooler doesn't support.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -103,4 +110,20 @@ model OwnedGame {
   game         Game?            @relation(fields: [gameId], references: [id])
 
   @@unique([libraryId, steamAppId])
+}
+
+// Tracks outcomes of batched IGDB lookups (external_games resolve + games
+// fetch) so we can see the real-world failure rate and tell whether the
+// batching approach needs to be revisited (e.g. IGDB rejecting large
+// `where field = (...)` lists) rather than guessing from anecdotal reports.
+model IgdbBatchLog {
+  id            String   @id @default(cuid())
+  operation     String
+  requestedIds  Int
+  resolvedCount Int
+  ok            Boolean
+  error         String?
+  createdAt     DateTime @default(now())
+
+  @@index([operation, ok])
 }
