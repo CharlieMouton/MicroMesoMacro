@@ -15,6 +15,7 @@ export function QuickRate() {
   const [loading, setLoading] = useState(true);
   const [exhausted, setExhausted] = useState(false);
   const [requestId, setRequestId] = useState(0);
+  const [seenIds, setSeenIds] = useState<string[]>([]);
 
   // Two-step fetch (pick a random game, then load its detail) lives entirely
   // inside .then() callbacks rather than a separately invoked async
@@ -22,7 +23,9 @@ export function QuickRate() {
   // to a function that eventually sets state, even after an await.
   useEffect(() => {
     let active = true;
-    fetch("/api/games/random")
+    const params = new URLSearchParams();
+    seenIds.forEach((id) => params.append("exclude", id));
+    fetch(`/api/games/random?${params.toString()}`)
       .then((res) => res.json())
       .then((randomData) => {
         if (!active) return;
@@ -31,6 +34,7 @@ export function QuickRate() {
           setLoading(false);
           return;
         }
+        setSeenIds((ids) => [...ids, randomData.game.id]);
         return fetch(`/api/games/${randomData.game.id}`)
           .then((res) => res.json())
           .then((detailData) => {
