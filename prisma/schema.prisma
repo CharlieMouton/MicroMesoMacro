@@ -111,3 +111,19 @@ model OwnedGame {
 
   @@unique([libraryId, steamAppId])
 }
+
+// Tracks outcomes of batched IGDB lookups (external_games resolve + games
+// fetch) so we can see the real-world failure rate and tell whether the
+// batching approach needs to be revisited (e.g. IGDB rejecting large
+// `where field = (...)` lists) rather than guessing from anecdotal reports.
+model IgdbBatchLog {
+  id            String   @id @default(cuid())
+  operation     String
+  requestedIds  Int
+  resolvedCount Int
+  ok            Boolean
+  error         String?
+  createdAt     DateTime @default(now())
+
+  @@index([operation, ok])
+}
