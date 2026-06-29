@@ -27,21 +27,46 @@ async function getAccessToken(): Promise<string> {
   return cachedToken.token;
 }
 
+// IGDB's 4 req/sec limit is shared across every concurrent user of this
+// app, so two people syncing at once can still get a 429 even though each
+// sync now only sends a couple of batched requests. A short retry absorbs
+// that collision instead of failing the whole sync.
+const RATE_LIMIT_RETRIES = 3;
+const RATE_LIMIT_BACKOFF_MS = 400;
+
 async function igdbQuery<T>(endpoint: string, body: string): Promise<T> {
   const [token, clientId] = await Promise.all([getAccessToken(), Promise.resolve(requireEnv("IGDB_CLIENT_ID"))]);
 
-  const res = await fetch(`${IGDB_BASE}/${endpoint}`, {
-    method: "POST",
-    headers: {
-      "Client-ID": clientId,
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "text/plain",
-    },
-    body,
-  });
-  if (!res.ok) throw new Error(`IGDB ${endpoint} request failed: ${res.status}`);
-  return res.json();
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`${IGDB_BASE}/${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Client-ID": clientId,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "text/plain",
+      },
+      body,
+    });
+    if (res.ok) return res.json();
+    if (res.status === 429 && attempt < RATE_LIMIT_RETRIES) {
+      await new Promise((r) => setTimeout(r, RATE_LIMIT_BACKOFF_MS * (attempt + 1)));
+      continue;
+    }
+    throw new Error(`IGDB ${endpoint} request failed: ${res.status}`);
+  }
 }
+
+// IGDB's `category` enum (https://api-docs.igdb.com/#game-enums). Only the
+// values relevant to collapsing DLC/expansions into their base game are
+// named here — standalone_expansion is deliberately excluded from any
+// "collapsible" set since those are sold/played as their own game.
+export const IGDB_CATEGORY = {
+  MAIN_GAME: 0,
+  DLC_ADDON: 1,
+  EXPANSION: 2,
+  BUNDLE: 3,
+  STANDALONE_EXPANSION: 4,
+} as const;
 
 export interface IgdbGame {
   id: number;
@@ -50,12 +75,14 @@ export interface IgdbGame {
   cover?: { image_id: string };
   first_release_date?: number;
   genres?: { name: string }[];
+  category?: number;
+  parent_game?: number;
 }
 
 export async function getGameByIgdbId(id: number): Promise<IgdbGame | null> {
   const games = await igdbQuery<IgdbGame[]>(
     "games",
-    `fields name,summary,cover.image_id,first_release_date,genres.name; where id = ${id};`
+    `fields name,summary,cover.image_id,first_release_date,genres.name,category,parent_game; where id = ${id};`
   );
   return games[0] ?? null;
 }
@@ -82,7 +109,7 @@ export async function searchGamesByName(name: string): Promise<IgdbGame[]> {
   const escaped = name.replace(/"/g, '\\"');
   return igdbQuery<IgdbGame[]>(
     "games",
-    `search "${escaped}"; fields name,summary,cover.image_id,first_release_date,genres.name; limit 20;`
+    `search "${escaped}"; fields name,summary,cover.image_id,first_release_date,genres.name,category,parent_game; limit 20;`
   );
 }
 
@@ -151,7 +178,7 @@ export async function getGamesByIgdbIds(
       const idList = batch.join(",");
       const results = await igdbQuery<IgdbGame[]>(
         "games",
-        `fields name,summary,cover.image_id,first_release_date,genres.name; where id = (${idList}); limit ${batch.length};`
+        `fields name,summary,cover.image_id,first_release_date,genres.name,category,parent_game; where id = (${idList}); limit ${batch.length};`
       );
       for (const g of results) games.set(g.id, g);
     } catch {
