@@ -55,3 +55,27 @@ button {
 table {
   border-collapse: collapse;
 }
+
+.tendency-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tendency-crowd {
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .tendency-row {
+    flex-wrap: wrap;
+  }
+  .tendency-crowd {
+    width: 100%;
+    text-align: left;
+    padding-left: calc(68px + 14px);
+  }
+}

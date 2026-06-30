@@ -23,9 +23,6 @@ export async function Nav() {
         <Link href="/" style={navLinkStyle}>
           Home
         </Link>
-        <Link href="/library" style={navLinkStyle}>
-          Library
-        </Link>
         <Link href="/search" style={navLinkStyle}>
           Search
         </Link>
@@ -35,21 +32,26 @@ export async function Nav() {
       </div>
 
       {session?.user?.id ? (
-        <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {session.user.image && (
-            // eslint-disable-next-line @next/next/no-img-element -- tiny avatar from an arbitrary Steam CDN host, not worth configuring next/image remotePatterns for
-            <img
-              src={session.user.image}
-              alt=""
-              width={28}
-              height={28}
-              style={{ borderRadius: 4 }}
-            />
-          )}
-          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-dim)" }}>
-            {session.user.name ?? "Profile"}
-          </span>
-        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Link href="/profile" style={navLinkStyle}>
+            Profile
+          </Link>
+          <Link href="/profile" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            {session.user.image && (
+              // eslint-disable-next-line @next/next/no-img-element -- tiny avatar from an arbitrary Steam CDN host, not worth configuring next/image remotePatterns for
+              <img
+                src={session.user.image}
+                alt=""
+                width={28}
+                height={28}
+                style={{ borderRadius: 4 }}
+              />
+            )}
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-dim)" }}>
+              {session.user.name ?? "Profile"}
+            </span>
+          </Link>
+        </div>
       ) : (
         // eslint-disable-next-line @next/next/no-html-link-for-pages -- full navigation into a route handler, not a page
         <a

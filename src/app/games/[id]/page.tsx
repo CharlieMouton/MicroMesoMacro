@@ -34,7 +34,7 @@ export default async function GamePage({
   return (
     <main style={{ maxWidth: 860, margin: "0 auto", padding: "34px 40px 80px" }}>
       <Link
-        href="/library"
+        href="/profile"
         style={{
           fontSize: 12,
           letterSpacing: ".1em",
@@ -42,7 +42,7 @@ export default async function GamePage({
           color: "var(--text-dim)",
         }}
       >
-        ← LIBRARY
+        ← PROFILE
       </Link>
 
       <div style={{ display: "flex", gap: 18, marginTop: 22, alignItems: "center" }}>
